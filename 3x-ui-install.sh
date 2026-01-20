@@ -29,11 +29,11 @@ curl -fSL \
   https://raw.githubusercontent.com/MHSanaei/3x-ui/main/x-ui.sh
 chmod +x /usr/bin/x-ui
 
-./x-ui setting -username admin -password PassWord -port 8000 -webBasePath x-ui
+./x-ui setting -username admin -password PassWord -port 8000 -webBasePath ui
 ./x-ui migrate
 
 install -m 644 x-ui.service.debian "$SERVICE_DIR/x-ui.service"
 systemctl daemon-reload
 systemctl enable --now x-ui
 
-echo "Done: http://IP:8000/x-ui"
+echo "Done: http://IP:8000/ui"
