@@ -12,6 +12,6 @@ sudo apt update && sudo apt install -y kexec-tools wget \
     netcfg/get_gateway=154.31.157.1 \
     netcfg/get_nameservers=\"1.1.1.1 8.8.8.8\" \
     netcfg/confirm_static=true \
-    preseed/url=https://raw.githubusercontent.com/iHarmonica/tool/refs/heads/main/debian-manual-kurun.cfg \
+    preseed/url=https://raw.githubusercontent.com/iHarmonica/tool/main/debian-manual-kurun.cfg \
     DEBIAN_FRONTEND=text" \
   && sudo systemctl kexec
