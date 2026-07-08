@@ -1,0 +1,141 @@
+#_preseed_V1
+# ==============================================================================
+# 配置文件：Debian Trixie (Debian 13) 全盲盒全自动重装定制脚本 (双栈静态网络版)
+# 适用环境：BackWaves 需要手动指定静态 IPv4 与静态 IPv6 的云服务器或独立服务器
+# 核心特性：无SWAP分区、全盘单分区、极速Xtom源、预装常用运维工具、双栈网络开机注入、全面系统性能魔改
+# ==============================================================================
+
+### 1. 语言与中文支持 (Localization)
+# ------------------------------------------------------------------------------
+d-i debian-installer/locale string en_US.UTF-8
+d-i localechooser/supported-locales multiselect en_US.UTF-8, zh_CN.UTF-8
+d-i keyboard-configuration/xkb-keymap select us
+
+
+### 2. 安装阶段网络配置 (使用你的 IPv4 确保顺利下载)
+# ------------------------------------------------------------------------------
+d-i netcfg/disable_autoconfig boolean true
+d-i netcfg/choose_interface select auto
+
+# 注入你指定的静态 IPv4 网络参数
+d-i netcfg/get_ipaddress string 157.254.51.251
+d-i netcfg/get_netmask string 255.255.255.0
+d-i netcfg/get_gateway string 157.254.51.1
+d-i netcfg/get_nameservers string 1.1.1.1 8.8.8.8
+d-i netcfg/confirm_static boolean true
+
+d-i netcfg/get_hostname string localhost
+d-i netcfg/get_domain string local
+d-i netcfg/wireless_wep string
+
+
+### 3. 镜像软件源设置 (Mirror settings)
+# ------------------------------------------------------------------------------
+d-i mirror/country string manual
+d-i mirror/http/hostname string mirror.xtom.com.hk
+d-i mirror/http/directory string /debian
+d-i mirror/http/proxy string
+
+
+### 4. 账户与密码设置 (Account setup)
+# ------------------------------------------------------------------------------
+d-i passwd/root-login boolean true
+d-i passwd/make-user boolean false
+d-i passwd/root-password password PassWord
+d-i passwd/root-password-again password PassWord
+
+
+### 5. 时钟与时区设置 (Clock and time zone)
+# ------------------------------------------------------------------------------
+d-i clock-setup/utc boolean true
+d-i time/zone string UTC
+d-i clock-setup/ntp boolean true
+
+
+### 6. 磁盘分区：全盘删除，禁止物理 SWAP (Partitioning)
+# ------------------------------------------------------------------------------
+d-i partman-auto/method string regular
+d-i partman-lvm/device_remove_lvm boolean true
+d-i partman-md/device_remove_md boolean true
+d-i partman-auto/expert_recipe string \
+    noswap :: \
+        1000 50 1000000000 ext4 \
+            $primary{ } $bootable{ } \
+            method{ format } format{ } \
+            use_filesystem{ } filesystem{ ext4 } \
+            mountpoint{ / } \
+        .
+d-i partman-auto/choose_recipe select noswap
+d-i partman-partitioning/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+
+
+### 7. 底层与预装软件选择 (Package selection)
+# ------------------------------------------------------------------------------
+d-i apt-setup/cdrom/set-first boolean false
+d-i apt-setup/non-free-firmware boolean true
+tasksel tasksel/first multiselect standard, ssh-server
+d-i pkgsel/include string openssh-server sudo curl wget vim unzip zip htop tmux tree lsof nginx certbot python3-certbot-nginx whois cron mtr-tiny iputils-ping procps socat zram-tools
+d-i pkgsel/upgrade select full-upgrade
+
+
+### 8. 引导程序安装 (Boot loader)
+# ------------------------------------------------------------------------------
+d-i grub-installer/only_debian boolean true
+d-i grub-installer/with_other_os boolean true
+d-i grub-installer/bootdev string default
+
+
+### 9. 结束安装并重启 (Finishing up)
+# ------------------------------------------------------------------------------
+d-i finish-install/reboot_in_progress note
+
+
+### 10. 高级后置脚本：双栈网络注入、系统级魔改与生产环境调优 (Custom commands)
+# ------------------------------------------------------------------------------
+d-i preseed/late_command string in-target sh -c '\
+    # [1] 强制开启 SSH 的 Root 密码远程登录认证 \
+    sed -i "s/^#\?PermitRootLogin .*/PermitRootLogin yes/" /etc/ssh/sshd_config; \
+    sed -i "s/^#\?PasswordAuthentication .*/PasswordAuthentication yes/" /etc/ssh/sshd_config; \
+    \
+    # [2] 强刷系统主机名与 Hosts 映射为 localhost \
+    echo "localhost" > /etc/hostname; \
+    sed -i "s/127.0.1.1.*/127.0.1.1\tlocalhost/" /etc/hosts; \
+    \
+    # [3] 核心：擦除安装程序临时生成的网卡配置，精准注入你的双栈 IPv4 + IPv6 静态网络 \
+    # 动态获取主网卡名称（例如 eth0 或 ens3 等）并写入纯净的 interfaces 配置 \
+    IFACE=\$(ip -4 route show to default | awk "{print \$5}"); \
+    echo "auto lo" > /etc/network/interfaces; \
+    echo "iface lo inet loopback" >> /etc/network/interfaces; \
+    echo "" >> /etc/network/interfaces; \
+    echo "auto \$IFACE" >> /etc/network/interfaces; \
+    echo "iface \$IFACE inet static" >> /etc/network/interfaces; \
+    echo "    address 157.254.51.251/24" >> /etc/network/interfaces; \
+    echo "    gateway 157.254.51.1" >> /etc/network/interfaces; \
+    echo "    dns-nameservers 1.1.1.1 8.8.8.8" >> /etc/network/interfaces; \
+    echo "" >> /etc/network/interfaces; \
+    echo "iface \$IFACE inet6 static" >> /etc/network/interfaces; \
+    echo "    address 2602:f7b1:3:0:1::be/128" >> /etc/network/interfaces; \
+    echo "    gateway 2602:f7b1:3::1" >> /etc/network/interfaces; \
+    echo "    dns-nameservers 2606:4700:4700::1111 2001:4860:4860::8888" >> /etc/network/interfaces; \
+    \
+    # [4] 修复并终根治特定厂商 root 环境变量路径不全的顽疾 \
+    echo "" >> /root/.bashrc; \
+    echo "export PATH=\$PATH:/usr/local/sbin:/usr/sbin:/sbin" >> /root/.bashrc; \
+    \
+    # [5] 注入 TCP BBR 拥塞控制算法及 Fast Open 性能调优 \
+    echo "net.core.default_qdisc=fq" >> /etc/sysctl.d/99-bbr.conf; \
+    echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.d/99-bbr.conf; \
+    echo "net.ipv4.tcp_fastopen=3" >> /etc/sysctl.d/99-bbr.conf; \
+    \
+    # [6] 启用 ZRAM 虚拟内存，并将 swappiness 设为 100 \
+    systemctl enable zramswap; \
+    echo "vm.swappiness=100" > /etc/sysctl.d/99-swappiness.conf; \
+    \
+    # [7] 严格限制 systemd 运行日志的最大体积 \
+    sed -i -e "s|#SystemMaxUse=.*|SystemMaxUse=128M|" \
+           -e "s|#RuntimeMaxUse=.*|RuntimeMaxUse=64M|" \
+           -e "s|#MaxRetentionSec=.*|MaxRetentionSec=1week|" \
+           /etc/systemd/journald.conf'
