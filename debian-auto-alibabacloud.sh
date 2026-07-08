@@ -1,0 +1,11 @@
+sudo apt update && sudo apt install -y kexec-tools wget \
+  && wget -P /tmp/ \
+    https://mirror.xtom.com.hk/debian/dists/trixie/main/installer-amd64/current/images/netboot/debian-installer/amd64/linux \
+    https://mirror.xtom.com.hk/debian/dists/trixie/main/installer-amd64/current/images/netboot/debian-installer/amd64/initrd.gz \
+  && sudo /sbin/kexec -l /tmp/linux --initrd=/tmp/initrd.gz --append="\
+    auto=true \
+    priority=critical \
+    netcfg/choose_interface=auto \
+    preseed/url=替换为你上传后的preseed.cfg直链 \
+    DEBIAN_FRONTEND=text" \
+  && sudo systemctl kexec
