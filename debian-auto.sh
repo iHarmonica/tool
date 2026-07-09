@@ -5,6 +5,8 @@ sudo apt update && sudo apt install -y kexec-tools wget \
   && sudo /sbin/kexec -l /tmp/linux --initrd=/tmp/initrd.gz --append="\
     auto=true \
     priority=critical \
+    lowmem/low=true \
+    anna/choose_modules=network-console \
     netcfg/choose_interface=auto \
     preseed/url=https://us.mcdull.me/debian-auto.cfg \
     DEBIAN_FRONTEND=text" \
