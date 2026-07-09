@@ -6,6 +6,6 @@ sudo apt update && sudo apt install -y kexec-tools wget \
     auto=true \
     priority=critical \
     netcfg/choose_interface=auto \
-    preseed/url=https://raw.githubusercontent.com/iHarmonica/tool/main/debian-auto.cfg \
+    preseed/url=https://us.mcdull.me/debian-auto.cfg \
     DEBIAN_FRONTEND=text" \
   && sudo systemctl kexec
