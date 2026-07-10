@@ -7,9 +7,9 @@ sudo apt update && sudo apt install -y kexec-tools wget \
     priority=critical \
     netcfg/disable_dhcp=true \
     netcfg/disable_autoconfig=true \
-    netcfg/get_ipaddress=154.31.157.121 \
+    netcfg/get_ipaddress=139.162.40.145 \
     netcfg/get_netmask=255.255.255.0 \
-    netcfg/get_gateway=154.31.157.1 \
+    netcfg/get_gateway=139.162.40.1 \
     netcfg/get_nameservers=\"1.1.1.1 8.8.8.8\" \
     netcfg/confirm_static=true \
     preseed/url=https://us.mcdull.me/debian-linode.cfg \
