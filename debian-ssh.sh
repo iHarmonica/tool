@@ -1,0 +1,13 @@
+sudo apt update && sudo apt install -y kexec-tools wget \
+  && wget -P /tmp/ \
+    https://mirror.xtom.com.hk/debian/dists/trixie/main/installer-amd64/current/images/netboot/debian-installer/amd64/linux \
+    https://mirror.xtom.com.hk/debian/dists/trixie/main/installer-amd64/current/images/netboot/debian-installer/amd64/initrd.gz \
+  && sudo /sbin/kexec -l /tmp/linux --initrd=/tmp/initrd.gz --append="\
+    auto=true \
+    priority=critical \
+    lowmem/low=true \
+    anna/choose_modules=network-console \
+    netcfg/choose_interface=auto \
+    preseed/url=https://us.mcdull.me/debian-ssh.cfg \
+    DEBIAN_FRONTEND=text" \
+  && sudo systemctl kexec
