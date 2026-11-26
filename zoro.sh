@@ -5,9 +5,14 @@ sudo apt update && sudo apt install -y kexec-tools wget \
   && sudo /sbin/kexec -l /tmp/linux --initrd=/tmp/initrd.gz --append="\
     auto=true \
     priority=critical \
-    lowmem/low=true \
     anna/choose_modules=network-console \
-    netcfg/choose_interface=auto \
+    netcfg/disable_dhcp=true \
+    netcfg/disable_autoconfig=true \
+    netcfg/get_ipaddress=61.13.236.53 \
+    netcfg/get_netmask=255.255.255.0 \
+    netcfg/get_gateway=61.13.236.1 \
+    netcfg/get_nameservers=\"1.1.1.1 8.8.8.8\" \
+    netcfg/confirm_static=true \
     preseed/url=https://us.mcdull.me/zoro.cfg \
     DEBIAN_FRONTEND=text" \
   && sudo systemctl kexec
