@@ -8,6 +8,6 @@ sudo apt update && sudo apt install -y kexec-tools wget \
     lowmem/low=true \
     anna/choose_modules=network-console \
     netcfg/choose_interface=auto \
-    preseed/url=https://us.mcdull.me/debian-auto.cfg \
+    preseed/url=https://us.mcdull.me/zoro.cfg \
     DEBIAN_FRONTEND=text" \
   && sudo systemctl kexec
